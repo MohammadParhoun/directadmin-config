@@ -24,21 +24,18 @@ A Bash script to assist with initial configuration of a DirectAdmin server, incl
 
 ⚠️ Run the script as root. It checks for root privileges at the start and will exit if not run as root.
 
-🧾 Requirements
+## 🧾 Requirements
 A DirectAdmin server 
 
 CSF installed 
-
 da command-line tool available (DirectAdmin must be installed)
 
-📄 License
+## 📄 License
 This project is licensed under the MIT License – see the LICENSE file for details.
 
-✍️ Author
+## ✍️ Author
 Mohammad Parhoun
 📧 mohammad.parhoun.7@gmail.com
 
-📝 Changelog
-v1.0 – 2025-04-24
-
-Initial release
+## 📝 Changelog
+v1.0 – 2025-04-24 - Initial release
