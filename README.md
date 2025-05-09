@@ -1,4 +1,4 @@
-# da-config.sh
+# directadmin-config.sh
 
 A Bash script to assist with initial configuration of a DirectAdmin server, including setting hostname and nameservers, configuring DirectAdmin port, enabling system time sync, updating Roundcube and skin settings, and more.
 
