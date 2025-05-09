@@ -1,7 +1,7 @@
 #!/bin/bash
 # ======================================================================================================
 # Script Name: directadmin-config.sh
-# Description: Bash script for initial configuration of DirectAdmin servers.
+# Description: A Bash script for initial configuration of DirectAdmin servers.
 # Author: Mohammad Parhoun <mohammad.parhoun.7@gmail.com>
 # Version: 1.0
 #
