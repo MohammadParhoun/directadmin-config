@@ -8,9 +8,6 @@
 # Copyright (c) 2025 Mohammad Parhoun. All Rights Reserved.
 # This script is licensed under the MIT License.
 #
-# Changelog:
-# v1.0 - 2025-05-09: Initial release with server type detection, hostname/NS config, NTP sync,
-#                    Roundcube fix, DA tuning, and CSF port handling.
 # ======================================================================================================
 
 
@@ -53,7 +50,8 @@ decision=`echo $decision | tr '[:upper:]' '[:lower:]'`
         da config-set servername $hostname && hostnamectl set-hostname $hostname && echo -e "${GREEN}✓ Server's Hostname changed to ${RESET}${BRIGHT_WHITE}$hostname${RESET}${GREEN} in the Administrator Settings and Linux.${RESET}" || echo -e "${RED}error while changing Server's Hostname ${RESET}"
         da config-set ns1 "ns1.$domain" && echo -e "${GREEN}✓ NS1 field changed to ${RESET}${BRIGHT_WHITE}ns1.$domain${RESET}${GREEN} in the Administrator Settings. This won't modify DNS zone file.${RESET}" || echo -e "${RED}error while changing ns1 field ${RESET}"
         da config-set ns2 "ns2.$domain" && echo -e "${GREEN}✓ NS2 field changed to ${RESET}${BRIGHT_WHITE}ns2.$domain${RESET}${GREEN} in the Administrator Settings. This won't modify DNS zone file.${RESET}" || echo -e "${RED}error while changing ns2 field ${RESET}"
-    elif [[ $decision == "N" || $decision == "n" || $decision == "No" || $decision == "no" ]]; then
+        sed -i "s/ns1=.*$/ns1=ns1.$domain/" /usr/local/directadmin/data/users/admin/reseller.conf && sed -i "s/ns2=.*$/ns2=ns2.$domain/" /usr/local/directadmin/data/users/admin/reseller.conf && echo -e "${GREEN}✓ NS records updated in Name Servers section.${RESET}" || echo -e "${RED}failed to update Name Server section.${RESET}"
+    elif [[ $decision == "n" || $decision == "no" ]]; then
         echo "skipped.."
     else
         echo -e "${RED}invalid input${RESET}" >&2
