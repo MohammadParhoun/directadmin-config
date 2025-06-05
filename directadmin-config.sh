@@ -80,9 +80,14 @@ sed -i "s/^\$config\['password_directadmin_port'\] = .*$/\$config\['password_dir
 # ─── Set Encoding for Enhanced Skin ────────────────
 sed -i "s/LANG_ENCODING=.*$/LANG_ENCODING=utf-8/" /usr/local/directadmin/data/skins/enhanced/lang/en/lf_standard.html && echo -e "${GREEN}✓ Updated language encoding to UTF-8 in DirectAdmin's Enhanced skin.${RESET}" || echo -e "${RED}Failed to update language encoding${RESET}"
 
-# ─── Install ncftp via DA script ───────────────────
-echo "Installing ncftp..."
-/usr/local/directadmin/scripts/ncftp.sh >/dev/null 2>&1 && echo -e "${GREEN}✓ ncftp client is installed and ready to use for remote FTP backups.${RESET}" || echo -e "${RED}Failed to install or initialize ncftp.${RESET}"
+# ─── Install NcFTP via DA script ───────────────────
+if [[ ! -f /usr/bin/ncftp ]]; then
+    echo "Installing NcFTP..."
+    /usr/local/directadmin/scripts/ncftp.sh >/dev/null 2>&1 && echo -e "${GREEN}✓ NcFTP client is installed and ready to use for remote FTP backups.${RESET}" || echo -e "${RED}Failed to install or initialize ncftp.${RESET}"
+else
+    echo -e "${YELLOW}✓ NcFTP is already installed. No further action required.${RESET}"
+fi
+
 
 
 # ─── Enable HISTTIMEFORMAT in Bash ────────────────
