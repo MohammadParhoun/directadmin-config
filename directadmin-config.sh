@@ -41,6 +41,10 @@ read -p "$(echo -e "${CYAN}Do you want to change Server's Hostname and NS fields
 decision=`echo $decision | tr '[:upper:]' '[:lower:]'`
     if [[ $decision == "y" || $decision == "yes" ]]; then
         read -p "$(echo -e "${CYAN}Enter the domain address e.g. google.com : ${RESET}")" domain
+        if [[ -z "$domain" ]]; then
+        echo -e "${RED}invalid input. Domain cannot be empty.${RESET}"
+        exit 1
+        fi
         domain=`echo $domain | tr '[:upper:]' '[:lower:]'`
         if $(echo $domain | grep -Eq "^.*\..*\..*"); then
             hostname="$domain"
