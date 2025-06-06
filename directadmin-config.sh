@@ -66,9 +66,11 @@ decision=`echo $decision | tr '[:upper:]' '[:lower:]'`
 # ─── Install chrony if not installed ───────────────
 if ! command -v chronyd &> /dev/null ; then
     if [[ -f /etc/redhat-release ]]; then
-        dnf install -y chrony
+        echo "Installing chrony package..."
+        dnf install -y chrony &> /dev/null && echo -e "${GREEN}✓ Chrony package installed successfully.${RESET}"
     elif [[ -f /etc/debian_version ]]; then
-        apt install -y chrony
+        echo "Installing chrony package..."
+        apt install -y chrony &> /dev/null && echo -e "${GREEN}✓ Chrony package installed successfully.${RESET}"
     else
         echo -e "${RED}Not supported distro. Couldn't install chrony package.${RESET}" >&2
         exit 1
