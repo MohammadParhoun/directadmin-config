@@ -237,7 +237,7 @@ API_TIMEOUT=45
 
 PACKAGE_NAME="newpackage" 
 
-response=$(curl -s -m $API_TIMEOUT -u "admin:$adminpassword" \
+response=$(curl -Lk -s -m $API_TIMEOUT -u "admin:$adminpassword" \
 -d "add=Save" \
 -d "packagename=$PACKAGE_NAME" \
 -d "aftp=OFF" \
@@ -269,7 +269,7 @@ response=$(curl -s -m $API_TIMEOUT -u "admin:$adminpassword" \
 -d "suspend_at_limit=ON" \
 -d "sysinfo=ON" \
 -d "vdomains=unlimited" \
-"http://127.0.0.1:$da_port/CMD_API_MANAGE_USER_PACKAGES")
+"https://127.0.0.1:$da_port/CMD_API_MANAGE_USER_PACKAGES")
 
 if echo "$response" | grep -q "error=0"; then
     if echo "$response" | grep -q "text=Saved"; then
@@ -291,7 +291,7 @@ fi
 # ─── Creating DirectAdmin User ────────────────────────────────
 user_name=$(echo $domain | tr '[:upper:]' '[:lower:]' | awk -F '.' '{ print $1 }' | tr -d '-' | cut -c 1-10)
 
-response=$(curl -s -m $API_TIMEOUT -u "admin:$adminpassword" "http://127.0.0.1:$da_port/CMD_API_ACCOUNT_USER" \
+response=$(curl -Lk -s -m $API_TIMEOUT -u "admin:$adminpassword" "https://127.0.0.1:$da_port/CMD_API_ACCOUNT_USER" \
 -d "action=create" \
 -d "add=Submit" \
 -d "username=$user_name" \
