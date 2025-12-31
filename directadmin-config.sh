@@ -365,11 +365,28 @@ EOF
 
         BACKUP_CRON_FILE="/usr/local/directadmin/data/admin/backup_crons.list"
 
+
+if [[ "$SERVER" == "d" || "$SERVER" == "dedicated" ]]; then
+
 cat > "$BACKUP_CRON_FILE" <<EOF
 1=action=backup&append%5Fto%5Fpath=dayofweek&database%5Fdata%5Faware=yes&dayofmonth=%2A&dayofweek=%2A&email%5Fdata%5Faware=yes&hour=%35&local%5Fpath=%2Fhome%2Fadmin%2Fadmin%5Fbackups&minute=%33%30&month=%2A&owner=admin&trash%5Faware=yes&type=admin&value=multiple&when=now&where=local&who=all
-2=action=backup&append%5Fto%5Fpath=dayofweek&database%5Fdata%5Faware=yes&dayofmonth=%2A&dayofweek=%2A&email%5Fdata%5Faware=yes&ftp%5Fip=$(echo -n "$backup_ip" | jq -sRr @uri)&ftp%5Fpassword=$(echo -n "$encoded_password" | jq -sRr @uri)&ftp%5Fpath=%2Fdaily&ftp%5Fport=%32%31&ftp%5Fsecure=no&ftp%5Fusername=$(echo -n "$backup_username" | jq -sRr @uri)&hour=%33&minute=%30&month=%2A&owner=admin&trash%5Faware=yes&type=admin&value=multiple&when=now&where=ftp&who=all
-3=action=backup&append%5Fto%5Fpath=dayofweek&database%5Fdata%5Faware=yes&dayofmonth=%2A&dayofweek=%35&email%5Fdata%5Faware=yes&ftp%5Fip=$(echo -n "$backup_ip" | jq -sRr @uri)&ftp%5Fpassword=$(echo -n "$encoded_password" | jq -sRr @uri)&ftp%5Fpath=%2Fweekly&ftp%5Fport=%32%31&ftp%5Fsecure=no&ftp%5Fusername=$(echo -n "$backup_username" | jq -sRr @uri)&hour=%31&minute=%30&month=%2A&owner=admin&trash%5Faware=yes&type=admin&value=multiple&when=now&where=ftp&who=all
+2=action=backup&append%5Fto%5Fpath=nothing&database%5Fdata%5Faware=yes&dayofmonth=%2A&dayofweek=%2A&email%5Fdata%5Faware=yes&ftp%5Fip=$(echo -n "$backup_ip" | jq -sRr @uri)&ftp%5Fpassword=$(echo -n "$encoded_password" | jq -sRr @uri)&ftp%5Fpath=%2Fdaily&ftp%5Fport=%32%31&ftp%5Fsecure=no&ftp%5Fusername=$(echo -n "$backup_username" | jq -sRr @uri)&hour=%33&minute=%30&month=%2A&owner=admin&trash%5Faware=yes&type=admin&value=multiple&when=now&where=ftp&who=all
+3=action=backup&append%5Fto%5Fpath=nothing&database%5Fdata%5Faware=yes&dayofmonth=%2A&dayofweek=%35&email%5Fdata%5Faware=yes&ftp%5Fip=$(echo -n "$backup_ip" | jq -sRr @uri)&ftp%5Fpassword=$(echo -n "$encoded_password" | jq -sRr @uri)&ftp%5Fpath=%2Fweekly&ftp%5Fport=%32%31&ftp%5Fsecure=no&ftp%5Fusername=$(echo -n "$backup_username" | jq -sRr @uri)&hour=%31&minute=%30&month=%2A&owner=admin&trash%5Faware=yes&type=admin&value=multiple&when=now&where=ftp&who=all
 EOF
+
+elif [[ "$SERVER" == "v" || "$SERVER" == "virtual" ]]; then
+
+cat > "$BACKUP_CRON_FILE" <<EOF
+1=action=backup&append%5Fto%5Fpath=nothing&database%5Fdata%5Faware=yes&dayofmonth=%2A&dayofweek=%2A&email%5Fdata%5Faware=yes&hour=%35&local%5Fpath=%2Fhome%2Fadmin%2Fadmin%5Fbackups&minute=%30&month=%2A&owner=admin&trash%5Faware=yes&type=admin&value=multiple&when=now&where=local&who=all
+2=action=backup&append%5Fto%5Fpath=nothing&database%5Fdata%5Faware=yes&dayofmonth=%2A&dayofweek=%2A&email%5Fdata%5Faware=yes&ftp%5Fip=$(echo -n "$backup_ip" | jq -sRr @uri)&ftp%5Fpassword=$(echo -n "$encoded_password" | jq -sRr @uri)&ftp%5Fpath=%2Fdaily&ftp%5Fport=%32%31&ftp%5Fsecure=no&ftp%5Fusername=$(echo -n "$backup_username" | jq -sRr @uri)&hour=%33&minute=%30&month=%2A&owner=admin&trash%5Faware=yes&type=admin&value=multiple&when=now&where=ftp&who=all
+3=action=backup&append%5Fto%5Fpath=nothing&database%5Fdata%5Faware=yes&dayofmonth=%2A&dayofweek=%35&email%5Fdata%5Faware=yes&ftp%5Fip=$(echo -n "$backup_ip" | jq -sRr @uri)&ftp%5Fpassword=$(echo -n "$encoded_password" | jq -sRr @uri)&ftp%5Fpath=%2Fweekly&ftp%5Fport=%32%31&ftp%5Fsecure=no&ftp%5Fusername=$(echo -n "$backup_username" | jq -sRr @uri)&hour=%31&minute=%30&month=%2A&owner=admin&trash%5Faware=yes&type=admin&value=multiple&when=now&where=ftp&who=all
+EOF
+
+else
+    echo -e "${RED}Unknown server type. Backup cron configuration skipped.${RESET}"
+fi
+
+
 if [[ $? -eq 0 ]]; then
     echo -e "${GREEN}✓ Backup crons have been successfully created in DirectAdmin.${RESET}"
 else
