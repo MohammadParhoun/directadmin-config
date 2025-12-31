@@ -24,6 +24,30 @@ server_ip=$(hostname -I | awk '{ print $1}')
 adminpassword=$(grep "adminpass" /usr/local/directadmin/conf/setup.txt | cut -d "=" -f 2)
 user_password=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c16; echo)
 
+check_and_fix_directadmin() {
+    if systemctl is-active --quiet directadmin; then
+        return 0
+    fi
+
+    if [[ -x /usr/bin/update_diradm ]]; then
+        /usr/bin/update_diradm >/dev/null 2>&1
+        sleep 5
+        systemctl restart directadmin >/dev/null 2>&1
+    else
+        systemctl restart directadmin >/dev/null 2>&1
+        sleep 5
+    fi
+
+    if systemctl is-active --quiet directadmin; then
+            echo -e "${GREEN}✓ DirectAdmin service recovered successfully.${RESET}"
+            return 0
+    else
+        echo -e "${RED}✗ DirectAdmin is down. Please check license status and service. Exiting script.${RESET}"
+        exit 1
+    fi
+}
+
+
 # ─── Root Check ─────────────────────────────────────
 if [[ "$EUID" -ne 0 ]]; then
     echo -e "${RED}Error: This script must be run as root.${RESET}" >&2
@@ -226,7 +250,7 @@ da_function() {
         exit 1
     fi
 }
-
+check_and_fix_directadmin
 da_function
 
 echo
@@ -242,6 +266,8 @@ if grep -qi "ubuntu" /etc/os-release; then
 else
     PROTOCOL="http"
 fi
+
+check_and_fix_directadmin
 
 response=$(curl -Lk -s -m $API_TIMEOUT -u "admin:$adminpassword" \
 -d "add=Save" \
@@ -296,6 +322,8 @@ fi
 
 # ─── Creating DirectAdmin User ────────────────────────────────
 user_name=$(echo $domain | tr '[:upper:]' '[:lower:]' | awk -F '.' '{ print $1 }' | tr -d '-' | cut -c 1-10)
+
+check_and_fix_directadmin
 
 response=$(curl -Lk -s -m $API_TIMEOUT -u "admin:$adminpassword" "$PROTOCOL://127.0.0.1:$da_port/CMD_API_ACCOUNT_USER" \
 -d "action=create" \
@@ -365,6 +393,7 @@ EOF
 
         BACKUP_CRON_FILE="/usr/local/directadmin/data/admin/backup_crons.list"
 
+check_and_fix_directadmin
 
 if [[ "$SERVER" == "d" || "$SERVER" == "dedicated" ]]; then
 
