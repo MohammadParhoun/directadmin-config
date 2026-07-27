@@ -3,13 +3,12 @@
 # Script Name: directadmin-config.sh
 # Description: A Bash script for initial configuration of DirectAdmin servers.
 # Author: Mohammad Parhoun <mohammad.parhoun.7@gmail.com>
-# Version: 2.0
+# Version: 2.1 (Bug fixes applied for API connection and Protocol Detection)
 #
-# Copyright (c) 2025 Mohammad Parhoun. All Rights Reserved.
+# Copyright (c) 2025-2026 Mohammad Parhoun. All Rights Reserved.
 # This script is licensed under the MIT License.
 #
 # ======================================================================================================
-
 
 GREEN="\e[32m"
 BRIGHT_GREEN="\e[1;32m"
@@ -47,14 +46,13 @@ check_and_fix_directadmin() {
     fi
 }
 
-
-# ─── Root Check ─────────────────────────────────────
+# ─── Root Check ───────────────────────────────────────────────────
 if [[ "$EUID" -ne 0 ]]; then
     echo -e "${RED}Error: This script must be run as root.${RESET}" >&2
     exit 1
 fi
 
-# ─── Ask Server Type ───────────────────────────────
+# ─── Ask Server Type ──────────────────────────────────────────────
 read -p "$(echo -e "${CYAN}Is it a [D]edicated or [V]irtual server? ${RESET}")" SERVER
 SERVER=`echo $SERVER | tr '[:upper:]' '[:lower:]'`
 if [[ "$SERVER" == "v" || "$SERVER" == "virtual" ]]; then
@@ -66,7 +64,7 @@ else
     exit 1
 fi
 
-# ─── Ask if Hostname & NS Should Be Set ───────────
+# ─── Ask if Hostname & NS Should Be Set ───────────────────────────
 read -p "$(echo -e "${CYAN}Do you want to change Server's Hostname and NS fields in the Administrator Settings? [N]o or [Y]es? ${RESET}")" decision
 decision=`echo $decision | tr '[:upper:]' '[:lower:]'`
     if [[ $decision == "y" || $decision == "yes" ]]; then
@@ -93,8 +91,6 @@ decision=`echo $decision | tr '[:upper:]' '[:lower:]'`
             echo -e "${RED}Invalid email format. Please enter a valid email.${RESET}"
             exit 1
         fi
-
-
 
 #backup1
     read -p "$(echo -e "${CYAN}Do you want to set Backup Settings? [N]o or [Y]es? ${RESET}")" decision2
@@ -129,7 +125,7 @@ decision=`echo $decision | tr '[:upper:]' '[:lower:]'`
         echo -e "${GREEN}##                                                      ##${RESET}"
         echo -e "${GREEN}##          ${RESET}${BRIGHT_GREEN}DirectAdmin Automated Setup Report${RESET}${GREEN}          ##${RESET}"
         echo -e "${GREEN}##                                                      ##${RESET}"
-        echo -e "${GREEN}#####################################################ُ#####${RESET}"
+        echo -e "${GREEN}##########################################################${RESET}"
         echo -e ""
         echo -e ""
         echo -e "${BRIGHT_GREEN}Starting DirectAdmin Automation Script...${RESET}"
@@ -138,7 +134,6 @@ decision=`echo $decision | tr '[:upper:]' '[:lower:]'`
 
         echo -e "${BRIGHT_GREEN}1) Server Identity & DNS Setup${RESET}"
 
-        #da config-set servername $hostname && hostnamectl set-hostname $hostname && echo -e "${GREEN}✓ Server's Hostname changed to ${RESET}${BRIGHT_WHITE}$hostname${RESET}${GREEN} in the Administrator Settings and Linux.${RESET}" || echo -e "${RED}error while changing Server's Hostname ${RESET}"
         da config-set ns1 "ns1.$domain" && echo -e "${GREEN}✓ NS1 field changed to ${RESET}${BRIGHT_WHITE}ns1.$domain${RESET}${GREEN} in the Administrator Settings. This won't modify DNS zone file.${RESET}" || echo -e "${RED}error while changing ns1 field ${RESET}"
         da config-set ns2 "ns2.$domain" && echo -e "${GREEN}✓ NS2 field changed to ${RESET}${BRIGHT_WHITE}ns2.$domain${RESET}${GREEN} in the Administrator Settings. This won't modify DNS zone file.${RESET}" || echo -e "${RED}error while changing ns2 field ${RESET}"
         sed -i "s/ns1=.*$/ns1=ns1.$domain/" /usr/local/directadmin/data/users/admin/reseller.conf && sed -i "s/ns2=.*$/ns2=ns2.$domain/" /usr/local/directadmin/data/users/admin/reseller.conf && echo -e "${GREEN}✓ NS records updated in Name Servers section.${RESET}" || echo -e "${RED} Failed to update Name Server section.${RESET}"
@@ -171,8 +166,7 @@ EOF
 echo
 echo -e "${BRIGHT_GREEN}2) System Environment & Utility Configuration${RESET}"
 
-
-# ─── Install chrony if not installed ───────────────
+# ─── Install chrony if not installed ──────────────────────────────
 if ! command -v chronyd &> /dev/null ; then
     if [[ -f /etc/redhat-release ]]; then
         echo "Installing chrony package..."
@@ -186,16 +180,16 @@ if ! command -v chronyd &> /dev/null ; then
     fi
 fi
 
-# ─── Timezone and NTP Sync ─────────────────────────
+# ─── Timezone and NTP Sync ────────────────────────────────────────
 timedatectl set-timezone Asia/Tehran && systemctl restart chronyd && echo -e "${GREEN}✓ Timezone set to Asia/Tehran and NTP synchronization restarted successfully.${RESET}" || echo -e "${RED}Failed to set timezone or restart NTP sync.${RESET}"
 
-# ─── Roundcube DA Port Fix ─────────────────────────
+# ─── Roundcube DA Port Fix ────────────────────────────────────────
 sed -i "s/^\$config\['password_directadmin_port'\] = .*$/\$config\['password_directadmin_port'\] = $da_port;/" /var/www/html/roundcube/plugins/password/config.inc.php && echo -e "${GREEN}✓ DirectAdmin port updated in Roundcube config file to fix email password change issue.${RESET}" || echo -e "${RED}error while changing Roundcube config.${RESET}"
 
-# ─── Set Encoding for Enhanced Skin ────────────────
+# ─── Set Encoding for Enhanced Skin ───────────────────────────────
 sed -i "s/LANG_ENCODING=.*$/LANG_ENCODING=utf-8/" /usr/local/directadmin/data/skins/enhanced/lang/en/lf_standard.html && echo -e "${GREEN}✓ Updated language encoding to UTF-8 in DirectAdmin's Enhanced skin.${RESET}" || echo -e "${RED}Failed to update language encoding${RESET}"
 
-# ─── Install NcFTP via DA script ───────────────────
+# ─── Install NcFTP via DA script ──────────────────────────────────
 if [[ ! -f /usr/bin/ncftp ]]; then
     echo "Installing NcFTP..."
     /usr/local/directadmin/scripts/ncftp.sh >/dev/null 2>&1 && echo -e "${GREEN}✓ NcFTP client is installed and ready to use for remote FTP backups.${RESET}"; ncftp_state="enabled" || echo -e "${RED}Failed to install or initialize ncftp.${RESET}"
@@ -204,8 +198,7 @@ else
     ncftp_state="enabled"
 fi
 
-
-# ─── Enable HISTTIMEFORMAT in Bash ────────────────
+# ─── Enable HISTTIMEFORMAT in Bash ────────────────────────────────
 HISTORY_LINE='export HISTTIMEFORMAT="%F %T "'
 if [[ -f ~/.bashrc ]]; then
     if grep -q 'HISTTIMEFORMAT' ~/.bashrc; then
@@ -222,7 +215,7 @@ fi
 echo
 echo -e "${BRIGHT_GREEN}3) DirectAdmin Security & Performance Tuning${RESET}"
 
-# ─── DirectAdmin Configuration Function ────────────
+# ─── DirectAdmin Configuration Function ───────────────────────────
 da_function() {
     da config-set port $da_port && echo -e "${GREEN}✓ DirectAdmin port changed to ${RESET}${BRIGHT_WHITE}$da_port${RESET}" || echo -e "${RED}error while changing directadmin port${RESET}"
     da config-set timeout 300 && echo -e "${GREEN}✓ timeout changed to ${RESET}${BRIGHT_WHITE}300${RESET}" || echo -e "${RED}error while changing timeout${RESET}"
@@ -230,9 +223,9 @@ da_function() {
     da config-set maxfilesize 1073741824 && echo -e "${GREEN}✓ maxfilesize changed to ${RESET}${BRIGHT_WHITE}1GB${RESET}" || echo -e "${RED} error while changing maxfilesize${RESET}"
     da config-set max_username_length 14 && echo -e "${GREEN}✓ max_username_length changed to ${RESET}${BRIGHT_WHITE}14${RESET}" || echo -e "${RED} error while changing max_username_length${RESET}"
     da config-set awstats 1 && echo -e "${GREEN}✓ awstats has been enabled.${RESET}" || echo -e "${RED} error while enabling awstats${RESET}"
-    #echo -e "  Restarting Directadmin..."
+    
     systemctl restart directadmin || echo -e "${RED} Error while restarting directadmin${RESET}"
-    #echo -e "  Adding DA port to the CSF config file..."
+    
     if [[ -e /etc/csf/csf.conf ]]; then
         cp /etc/csf/csf.conf /etc/csf/csf.conf.bak-$(date +%F-%T) 
         if ! `grep '^TCP_IN =' /etc/csf/csf.conf | grep -Eq "\b$da_port\b"`; then
@@ -256,20 +249,24 @@ da_function
 echo
 echo -e "${BRIGHT_GREEN}4) Hosting Package & User Account Creation${RESET}"
 
-# ─── DirectAdmin Package Creation ────────────────────────────────
-API_TIMEOUT=45
-
-PACKAGE_NAME="newpackage" 
-
-if grep -qi "ubuntu" /etc/os-release; then
+# ─── HTTP/HTTPS Auto Detection ────────────────────────────────────
+if grep -Eq "^ssl=1" /usr/local/directadmin/conf/directadmin.conf 2>/dev/null; then
     PROTOCOL="https"
 else
     PROTOCOL="http"
 fi
 
+# ─── DirectAdmin Package Creation ─────────────────────────────────
+API_TIMEOUT=45
+PACKAGE_NAME="newpackage" 
+
 check_and_fix_directadmin
 
-response=$(curl -Lk -s -m $API_TIMEOUT -u "admin:$adminpassword" \
+echo -e "${YELLOW}Waiting for DirectAdmin to initialize port $da_port...${RESET}"
+sleep 8
+
+response=$(curl -Lk -sS -m $API_TIMEOUT -u "admin:$adminpassword" \
+-d "action=save" \
 -d "add=Save" \
 -d "packagename=$PACKAGE_NAME" \
 -d "aftp=OFF" \
@@ -301,7 +298,7 @@ response=$(curl -Lk -s -m $API_TIMEOUT -u "admin:$adminpassword" \
 -d "suspend_at_limit=ON" \
 -d "sysinfo=ON" \
 -d "vdomains=unlimited" \
-"$PROTOCOL://127.0.0.1:$da_port/CMD_API_MANAGE_USER_PACKAGES")
+"$PROTOCOL://127.0.0.1:$da_port/CMD_API_MANAGE_USER_PACKAGES" 2>&1)
 
 if echo "$response" | grep -q "error=0"; then
     if echo "$response" | grep -q "text=Saved"; then
@@ -313,19 +310,17 @@ if echo "$response" | grep -q "error=0"; then
     fi
 else
     echo -e "${RED}Failed to create DirectAdmin package '$PACKAGE_NAME'.${RESET}"
-    decoded_response=$(printf '%b' "${response//%/\\x}")
-    echo -e "${YELLOW}API Response:${RESET} $decoded_response"
+    echo -e "${YELLOW}Raw Error / API Response:${RESET} $response"
     exit 1 
 fi
 
 
-
-# ─── Creating DirectAdmin User ────────────────────────────────
+# ─── Creating DirectAdmin User ────────────────────────────────────
 user_name=$(echo $domain | tr '[:upper:]' '[:lower:]' | awk -F '.' '{ print $1 }' | tr -d '-' | cut -c 1-10)
 
 check_and_fix_directadmin
 
-response=$(curl -Lk -s -m $API_TIMEOUT -u "admin:$adminpassword" "$PROTOCOL://127.0.0.1:$da_port/CMD_API_ACCOUNT_USER" \
+response=$(curl -Lk -sS -m $API_TIMEOUT -u "admin:$adminpassword" \
 -d "action=create" \
 -d "add=Submit" \
 -d "username=$user_name" \
@@ -335,15 +330,14 @@ response=$(curl -Lk -s -m $API_TIMEOUT -u "admin:$adminpassword" "$PROTOCOL://12
 -d "domain=$domain" \
 -d "ip=$server_ip" \
 -d "package=$PACKAGE_NAME" \
--d "notify=yes")
-
+-d "notify=yes" \
+"$PROTOCOL://127.0.0.1:$da_port/CMD_API_ACCOUNT_USER" 2>&1)
 
 if echo "$response" | grep -q "error=0"; then
     echo -e "${GREEN}✓ DirectAdmin user '$user_name' created successfully for domain '$domain'.${RESET}"
 else
     echo -e "${RED}Failed to create DirectAdmin user '$user_name'.${RESET}"
-    decoded_response=$(printf '%b' "${response//%/\\x}")
-    echo -e "${YELLOW}API Response:${RESET} $decoded_response"
+    echo -e "${YELLOW}Raw Error / API Response:${RESET} $response"
     exit 1
 fi
 
@@ -351,7 +345,7 @@ echo
 echo -e "${BRIGHT_GREEN}5) Backup Configuration & Validation${RESET}"
 
 #backup2
-echo -e "${GREEN}✓ Backup settings saved to $BACKUP_CONF${RESET}"    #set in backup1
+echo -e "${GREEN}✓ Backup settings saved to $BACKUP_CONF${RESET}"
 
 if [[ $backup_state == "enabled" && $ncftp_state == "enabled" ]]; then
         ncftp -u $backup_username -p $backup_password $backup_ip >/dev/null 2>&1 <<EOF
@@ -362,8 +356,7 @@ EOF
   if [[ $? -eq 0 ]]; then
         echo -e "${GREEN}✓ Successfully connected to FTP server and ensured 'daily' and 'weekly' directories exist.${RESET}"
 
-
-#jq package installation
+    # jq package installation
     if ! command -v jq &> /dev/null; then
         echo -e "${YELLOW} jq package not found. Installing...${RESET}"
         if command -v apt &> /dev/null; then
@@ -389,8 +382,6 @@ EOF
         echo -e "${GREEN}✓ jq package installed successfully.${RESET}"
     fi
 
-
-
         BACKUP_CRON_FILE="/usr/local/directadmin/data/admin/backup_crons.list"
 
 check_and_fix_directadmin
@@ -415,7 +406,6 @@ else
     echo -e "${RED}Unknown server type. Backup cron configuration skipped.${RESET}"
 fi
 
-
 if [[ $? -eq 0 ]]; then
     echo -e "${GREEN}✓ Backup crons have been successfully created in DirectAdmin.${RESET}"
 else
@@ -437,17 +427,16 @@ fi
 fi
 
 echo
-#echo -e "------------------------------------------------------------------------------------------------------"
 echo  -e "${BRIGHT_GREEN}----------------- Final Credentials -----------------${RESET}"
 echo
 echo -e "${GREEN}* Admin Login Information:${RESET}"
-echo -e "${GREEN}* Web Panel URL:   ${RESET}${BRIGHT_WHITE} http://$(hostname -I | awk '{print $1}'):$da_port${RESET}"
+echo -e "${GREEN}* Web Panel URL:   ${RESET}${BRIGHT_WHITE} $PROTOCOL://$(hostname -I | awk '{print $1}'):$da_port${RESET}"
 echo -e "${GREEN}* Username:        ${RESET}${BRIGHT_WHITE} admin${RESET}"
 echo -e "${GREEN}* Admin Password:  ${RESET}${BRIGHT_WHITE} $adminpassword${RESET}"
 echo
 echo
 echo -e "${GREEN}* User account information:${RESET}"
-echo -e "${GREEN}* Web Panel URL:   ${RESET}${BRIGHT_WHITE} http://$(hostname -I | awk '{print $1}'):$da_port${RESET}"
+echo -e "${GREEN}* Web Panel URL:   ${RESET}${BRIGHT_WHITE} $PROTOCOL://$(hostname -I | awk '{print $1}'):$da_port${RESET}"
 echo -e "${GREEN}* Username:        ${RESET}${BRIGHT_WHITE} $user_name${RESET}"
 echo -e "${GREEN}* Password:        ${RESET}${BRIGHT_WHITE} $user_password${RESET}"
 echo
